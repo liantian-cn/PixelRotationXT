@@ -454,7 +454,7 @@ local function PR_PaladinProtection()
     -- 如果敲钟在CD
     -- 则圣洁鸣钟
 
-    if EnemiesInRangeCount(30000000, "制裁之锤") >= 4 then
+    if EnemiesInRangeCount(40000000, "制裁之锤") >= 4 then
         if SpellCDRemaining_GCD("圣洁鸣钟") == 0 then
             return SetSC("圣洁鸣钟")
         end
