@@ -1,0 +1,8 @@
+## Interface: 110005
+## Title: PixelRotationXT
+## Notes: A simple color block plugin.
+## Version: 1.0
+## Author: liantian-cn
+
+PixelRotationXT.xml
+PixelRotationXT.lua
