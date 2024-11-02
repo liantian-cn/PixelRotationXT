@@ -7,7 +7,7 @@ local color = {  }
 local f = CreateFrame("Frame", nil, UIParent)
 --f:SetPoint("CENTER")
 f:SetPoint("TOPLEFT", UIParent, "TOPLEFT", 0, 0) -- 设置到左上角
-f:SetSize(64, 64)
+f:SetSize(32, 32)
 
 f.tex = f:CreateTexture()
 f.tex:SetAllPoints()
@@ -15,10 +15,10 @@ f.tex:SetAllPoints()
 
 local textBox = CreateFrame("Frame", nil, UIParent)
 textBox:SetPoint("TOPLEFT", f, "TOPRIGHT", 0, 0) -- 放置在图标右侧
-textBox:SetSize(256, 64)
+textBox:SetSize(512, 32)
 local text = textBox:CreateFontString(nil, "OVERLAY", "GameFontNormal")
 text:SetPoint("LEFT", textBox, "LEFT", 0, 0)
-text:SetFont("Fonts\\FRIZQT__.TTF", 32, nil)
+text:SetFont("Fonts\\FRIZQT__.TTF", 24, nil)
 --text:SetText("这是一个文本框")
 f:RegisterEvent("UNIT_COMBAT")
 f:RegisterEvent("PLAYER_LEAVE_COMBAT")
@@ -52,26 +52,46 @@ f:RegisterUnitEvent("TRAIT_CONFIG_UPDATED")
 f:RegisterUnitEvent("UI_ERROR_MESSAGE")
 f:RegisterEvent("LOADING_SCREEN_ENABLED")
 f:RegisterEvent("LOADING_SCREEN_DISABLED")
-f:SetScript("OnEvent", function()
-    PixelRotationXLMain()
-end)
+
+local function convertToRGB(number)
+    -- 确保输入数字在有效范围内
+    if number < 0 or number > 16777216 then
+        print("输入数字无效")
+        return
+    end
+
+    -- 将输入数字转换为RGB分量
+    local r = math.floor(number / 65536)
+    local g = math.floor((number % 65536) / 256)
+    local b = number % 256
+
+    -- 返回RGB分量
+    return r, g, b
+end
 
 local last_title = 0
 local function SetTitleAndColor(title, r, g, b)
-    --如果和上一个相同，则不更新颜色
-    if last_title == title then
-        return
-    end
-    last_title = title
+    ----如果和上一个相同，则不更新颜色
+    --if last_title == title then
+    --    return
+    --end
+    --last_title = title
     f.tex:SetColorTexture(r, g, b, 1)
     text:SetText(title)
 end
 
 local SetTC = SetTitleAndColor
 
-function SetTitleBySpellColor(spell_name)
-    local r, g, b = unpack(color[spell_name])
-    return SetTitleAndColor(spell_name, r, g, b)
+local function SetTitleBySpellColor(spell_name, title)
+    local spell_id = spell[spell_name]
+    if spell_id == nil then
+        print("没有找到法术ID: " .. spell_name)
+        return false
+    end
+    --print("法术ID: " .. spell_id)
+    local r, g, b = convertToRGB(spell_id)
+    --print(r,g,b)
+    return SetTitleAndColor(title, r / 255, g / 255, b / 255)
 end
 
 SetSC = SetTitleBySpellColor
@@ -92,26 +112,47 @@ spell["圣洁鸣钟"] = 375576
 spell["愤怒之锤"] = 24275
 spell["荣耀圣令"] = 85673
 spell["制裁之锤"] = 853
+spell["圣盾术"] = 642
+spell["保护祝福"] = 1022
+spell["提尔之眼"] = 387174
+spell["炽热防御者"] = 31850
+spell["戍卫"] = 389539
+spell["正义盾击"] = 53600
 
 buff["正义盾击"] = 132403
 buff["奉献"] = 188370
 buff["圣洁武器"] = 432502
 buff["神圣壁垒"] = 432496
 buff["闪耀之光"] = 327510
-
-color["奉献"] = { 0, 0, 0.25 }    -- 1
-color["祝福之锤"] = { 0, 0, 0.5 }   -- 2
-color["正义盾击"] = { 0, 0, 0.75 }    -- 3
-color["审判"] = { 0, 0, 1 }           -- 4
-color["复仇者之盾"] = { 0, 0.25, 0 }   -- 5
-color["责难"] = { 0, 0.25, 0.25 }     -- 6
-color["清毒术"] = { 0, 0.25, 0.5 }     -- 7
-color["神圣军备"] = { 0, 0.25, 0.75 }    -- 8
-color["圣洁鸣钟"] = { 0, 0.25, 1 }     -- 9
-color["愤怒之锤"] = { 0, 0.5, 0 }     -- 10
-color["荣耀圣令"] = { 0, 0.5, 0.25 }     -- 11
+buff["闪耀之光2"] = 182104
+buff["圣盾术"] = 642
+buff["保护祝福"] = 1022
+buff["炽热防御者"] = 31850
+buff["戍卫"] = 389539
+buff["信仰壁垒"] = 385724
+buff["信仰圣光"] = 379041
 
 
+---- 爆发控制
+
+local burst_time = GetTime()
+local burst_status = false
+
+local function IsBurst()
+    return GetTime() <= burst_time
+end
+
+local function SetBurst(time)
+    burst_time = GetTime() + time
+end
+
+local function ClearBurst()
+    burst_time = GetTime() - 30
+end
+
+PR_SetBurst = SetBurst
+
+local in_combat = false
 
 -- 打断优先清单
 local interrupt_priority_list = {
@@ -235,6 +276,22 @@ local function PlayerBuffRemaining(buff_name)
     return 0
 end
 
+local function PlayerBuffCount(buff_name)
+    local data = C_UnitAuras.GetPlayerAuraBySpellID(buff[buff_name])
+    local count
+    if data then
+        count = data.applications
+    else
+        -- 如果是nil，那就是无buff，返回0。
+        return 0
+    end
+    -- 如果是0层，他们可能没有层数设置。
+    if data.applications == 0 then
+        count = 1
+    end
+    return count
+end
+
 
 -- 有没有可驱散的debuff
 
@@ -281,7 +338,7 @@ end
 -- /dump SpellCDRemaining_GCD("圣洁鸣钟")
 -- /dump C_Spell.GetSpellCooldown(31935)
 
-function SpellCDRemaining_GCD(spell_name)
+local function SpellCDRemaining_GCD(spell_name)
     --print(spell[spell_name])
     local spellCooldownInfo = C_Spell.GetSpellCooldown(spell[spell_name])
     if spellCooldownInfo.duration == 0 then
@@ -312,6 +369,13 @@ local function SpellUsable(spell_name)
     return C_Spell.IsSpellUsable(spell[spell_name])
 end
 
+-- 护腕可用
+
+local function bracers_available()
+    local startTime, duration, enable = C_Container.GetItemCooldown(GetInventoryItemID("player", 9))
+    return (enable == 1) and (duration == 0)
+end
+
 -- 如果身边有指定技能可攻击的怪，最大血量多少的。
 
 local function EnemiesInRangeCount(mod_health, spell_name)
@@ -332,6 +396,18 @@ end
 -- 防骑模块
 
 local function PR_PaladinProtection()
+
+
+    if burst_status ~= IsBurst() then
+        if IsBurst() then
+            --print("进入爆发模式")
+            print("进入爆发模式")
+        else
+            --print("退出爆发模式")
+            print("退出爆发模式")
+        end
+        burst_status = IsBurst()
+    end
 
     if not UnitAffectingCombat("player") then
         --return false
@@ -360,62 +436,61 @@ local function PR_PaladinProtection()
     -- ----------
     -- 基础减伤覆盖
     -- ----------
-
     -- 如果神圣能量>=3
-    -- 如果没有盾击覆盖，则打盾击
-    -- 如果盾击持续时间少于3秒，则打盾击
-    -- 因为没有时候，PlayerBuffRemaining也返回0，所以合并
-
-    if HolyPower >= 3 then
-        if PlayerBuffRemaining("正义盾击") < 2.5 then
-            return SetSC("正义盾击")
-        end
+    local p1_1 = (HolyPower >= 3)
+    -- 如果没有盾击覆盖，或持续时间少于4秒
+    local p1_2 = (PlayerBuffRemaining("正义盾击") < 4)
+    if (p1_1 and p1_2) then
+        return SetSC("正义盾击", "p1 正义盾击")
     end
 
-    -- 如果没有奉献buff
-    -- 如果奉献在冷却
+
+    -- 如果没有奉献buff，
+    local p2_1 = (not PlayerHaveBuff("奉献"))
+    -- 奉献在冷却
+    local p2_2 = (SpellCDRemaining_GCD("奉献") == 0)
     -- 则释放奉献
-
-    if not PlayerHaveBuff("奉献") then
-        if SpellCDRemaining_GCD("奉献") == 0 then
-            return SetSC("奉献")
-        end
+    if (p2_1 and p2_2) then
+        return SetSC("奉献", "p2 奉献")
     end
 
-    -- ----------
-    -- 减伤
-    -- ----------
 
-    -- 血量低于80%，存在闪耀之光buff 327510，则释放荣耀圣令
-
-
-    if (UnitHealth("player") / UnitHealthMax("player")) < 0.7 then
-        if PlayerHaveBuff("闪耀之光") then
-            return SetSC("荣耀圣令")
-        end
+    -- 血量低于50%，，
+    local p3_1 = ((UnitHealth("player") / UnitHealthMax("player")) < 0.5)
+    -- 存在闪耀之光buff 327510
+    local p3_2 = PlayerHaveBuff("闪耀之光")
+    -- 则释放荣耀圣令
+    if (p3_1 and p3_2) then
+        return SetSC("荣耀圣令", "p3 荣耀圣令")
     end
 
-    -- ----------
-    -- 打断
-    -- ----------
 
     -- 如果焦点或目标的施法，属于要打断的
-    -- 如果在近战范围，责难的CD好，用责难打断。
-    -- 如果不在近战范围，且飞盾CD，用飞盾打断。
+    local p4_1 = IsCastInterruptable(AutoTarget)
+    -- 责难在CD
+    local p4_2 = (SpellCDRemaining("责难") == 0)
+    -- 责难在施法范围
+    local p4_3 = SpellInRange("责难", AutoTarget)
+    -- 复仇者之盾在CD
+    local p4_4 = (SpellCDRemaining_GCD("复仇者之盾") == 0)
+    -- 复仇者之盾在施法范围
+    local p4_5 = SpellInRange("复仇者之盾", AutoTarget)
+    -- 优先责难，其次复仇者之盾
+    if (p4_1 and p4_2 and p4_3) then
+        return SetSC("责难", "p4 责难")
+    end
+    if (p4_1 and p4_4 and p4_5) then
+        return SetSC("责难", "p4 责难")
+    end
 
 
-    if IsCastInterruptable(AutoTarget) then
-        if SpellCDRemaining("责难") == 0 then
-            if SpellInRange("责难", AutoTarget) then
-                return SetSC("责难")
-            end
-        end
-        if SpellCDRemaining_GCD("复仇者之盾") == 0 then
-            if SpellInRange("复仇者之盾", AutoTarget) then
-                return SetSC("复仇者之盾")
-            end
-        end
-
+    -- 如果没有信仰圣光buff
+    local p14_1 = (not PlayerHaveBuff("信仰圣光"))
+    -- 如果闪耀之光层数等于2
+    local p14_2 = (PlayerBuffCount("闪耀之光") == 2)
+    -- 满足以上条件,爆发模式下,则释放荣耀圣令
+    if (p14_1 and p14_2 and IsBurst()) then
+        return SetSC("荣耀圣令", "p14 荣耀圣令")
     end
 
     -- ----------
@@ -427,135 +502,173 @@ local function PR_PaladinProtection()
     -- 如果鼠标指向目标有毒或者疾病。
     -- 如果清毒术在cd
     -- 清毒
-    if UnitExists("mouseover") then
-        if UnitInParty("mouseover") or UnitInRaid("mouseover") then
-            if MouseOverHaveCanDispelDeBuff("Poison") or MouseOverHaveCanDispelDeBuff("Disease") then
-                if SpellCDRemaining_GCD("清毒术") == 0 then
-                    return SetSC("清毒术")
-                end
-            end
-        end
+
+    -- 如果存在鼠标指向目标，且是小队成员
+    local p5_1 = (UnitExists("mouseover") and (UnitInParty("mouseover") or UnitInRaid("mouseover")))
+    -- 如果鼠标指向目标身上有毒 or 疾病
+    local p5_2 = (MouseOverHaveCanDispelDeBuff("Poison") or MouseOverHaveCanDispelDeBuff("Disease"))
+    -- 如果清毒术在cd
+    local p5_3 = (SpellCDRemaining_GCD("清毒术") == 0)
+    -- 满足上述条件，释放清毒术
+    if (p5_1 and p5_2 and p5_3) then
+        return SetSC("清毒术", "p5 清毒术")
     end
 
-    -- ----------
-    -- 牺牲祝福
-    -- ----------
-
-    -- 如果自己血量>80%.
-    -- 周围怪数量>6
-    --
 
 
     -- ----------
     -- 输出优先级
     -- ----------
 
-    -- 如果周围有剩余血量大于3000万血量的怪，数量超过4个。
+
+    -- 如果身边有3000万血大怪4个
+    local p6_1 = (EnemiesInRangeCount(30000000, "制裁之锤") >= 4)
     -- 如果敲钟在CD
-    -- 则圣洁鸣钟
-
-    if EnemiesInRangeCount(40000000, "制裁之锤") >= 4 then
-        if SpellCDRemaining_GCD("圣洁鸣钟") == 0 then
-            return SetSC("圣洁鸣钟")
-        end
+    local p6_2 = (SpellCDRemaining_GCD("圣洁鸣钟") == 0)
+    -- 如果豆子 < 3
+    local p6_3 = (HolyPower < 3)
+    -- 如果没有 圣盾术、 保护祝福、 、 、 、buff
+    local p6_4_1 = (PlayerBuffRemaining("圣盾术") < 1.2)
+    local p6_4_2 = (PlayerBuffRemaining("保护祝福") < 1.2)
+    local p6_4_3 = (PlayerBuffRemaining("炽热防御者") < 1.2)
+    local p6_4_4 = (PlayerBuffRemaining("戍卫") < 1.2)
+    local p6_4 = p6_4_1 and p6_4_2 and p6_4_3 and p6_4_4
+    -- 满足以上条件，在爆发期内，使用圣洁鸣钟
+    if (p6_1 and p6_2 and p6_3 and p6_4 and IsBurst()) then
+        return SetSC("圣洁鸣钟", "p6 圣洁鸣钟")
     end
 
-
-    -- 如果周围有剩余血量大于4000万血量的怪，数量超过4个。
-    -- 如果没有圣洁武器和神圣壁垒buff
-    -- 神圣军备
-    if EnemiesInRangeCount(40000000, "制裁之锤") >= 4 then
-        if SpellCharges("神圣军备") > 0 then
-            if (not PlayerHaveBuff("圣洁武器")) and (not PlayerHaveBuff("神圣壁垒"))  then
-                return SetSC("神圣军备")
-            end
-        end
-    end
 
     -- 如果周围有剩余血量大于3000万血量的怪，数量超过4个。
-    -- 如果没有圣洁武器和神圣壁垒buff
-    -- 不浪费层数
-    -- 神圣军备
-    if EnemiesInRangeCount(30000000, "制裁之锤") >= 4 then
-        if SpellCharges("神圣军备") > 1 then
-            if (not PlayerHaveBuff("圣洁武器")) and (not PlayerHaveBuff("神圣壁垒"))  then
-                return SetSC("神圣军备")
-            end
-        end
+    local p7_1 = (EnemiesInRangeCount(30000000, "制裁之锤") >= 4)
+    -- 如果神圣军备可用次数大于 0
+    local p7_2 = (SpellCharges("神圣军备") > 0)
+    -- 如果玩家没有圣洁武器buff
+    local p7_3 = (not PlayerHaveBuff("圣洁武器"))
+    -- 如果玩家没有神圣壁垒buff
+    local p7_4 = (not PlayerHaveBuff("神圣壁垒"))
+    -- 满足以上条件，在爆发期，使用神圣军备
+    if (p7_1 and p7_2 and p7_3 and p7_4 and IsBurst()) then
+        return SetSC("神圣军备", "p7 神圣军备")
+    end
+
+
+    -- 如果飞盾冷却好了
+    local p8_1 = (SpellCDRemaining_GCD("复仇者之盾") == 0)
+    -- 在施法范围
+    local p8_2 = SpellInRange("复仇者之盾", AutoTarget)
+    -- 如果没有“信仰壁垒”buff
+    local p8_3 = (not PlayerHaveBuff("信仰壁垒"))
+    -- 满足上述条件，释放飞盾
+    if (p8_1 and p8_2 and p8_3) then
+        return SetSC("复仇者之盾", "p8 复仇者之盾")
+    end
+
+
+
+    -- 如果神圣能量小于5
+    local p9_1 = (HolyPower < 5)
+    -- 如果愤怒支持可用
+    local p9_2 = SpellUsable("愤怒之锤")
+    -- 如果愤怒之锤在CD
+    local p9_3 = (SpellCDRemaining_GCD("愤怒之锤") == 0)
+    -- 如果愤怒之锤在距离内
+    local p9_4 = SpellInRange("愤怒之锤", "target")
+    -- 满足以上条件，释放愤怒之锤
+    if (p9_1 and p9_2 and p9_3 and p9_4) then
+        return SetSC("愤怒之锤", "p9 愤怒之锤")
+    end
+
+
+    -- 如果神圣能量小于5
+    local p11_1 = (HolyPower < 5)
+    -- 审判在施法范围
+    local p11_2 = SpellInRange("审判", "target")
+    -- 审判可用次数大于等于1
+    local p11_3 = (SpellCharges("审判") >= 1)
+    -- 满足上述条件，释放审判
+    if (p11_1 and p11_2 and p11_3) then
+        return SetSC("审判", "p11 审判")
+    end
+
+
+    -- 如果神圣能量小于5
+    local p10_1 = (HolyPower < 5)
+    -- 祝福之锤可用次数大于1
+    local p10_2 = (SpellCharges("祝福之锤") >= 1)
+    -- 则释放祝福之锤。
+    if (p10_1 and p10_2) then
+        return SetSC("祝福之锤", "p10 祝福之锤")
     end
 
     -- 如果飞盾冷却好了
-    -- 在施法范围
-    -- 如果能量大于等于3
+    local p12_1 = (SpellCDRemaining_GCD("复仇者之盾") == 0)
+    -- 飞盾在施法范围
+    local p12_2 = SpellInRange("复仇者之盾", AutoTarget)
     -- 则释放飞盾
-    if SpellCDRemaining_GCD("复仇者之盾") == 0 then
-        if SpellInRange("复仇者之盾", AutoTarget) then
-            if HolyPower > 3 then
-                return SetSC("复仇者之盾")
-
-            end
-        end
+    if (p12_1 and p12_2) then
+        return SetSC("复仇者之盾", "p12 复仇者之盾")
     end
 
 
-    -- 如果神圣能量小于5
-    -- 如果愤怒支持可用24275
-    -- 如果距离内
-    -- 则释放愤怒之锤
-    if HolyPower < 5 then
-        if SpellUsable("愤怒之锤") then
-            if SpellCDRemaining_GCD("愤怒之锤") == 0 then
-                if SpellInRange("愤怒之锤", "target") then
-                    return SetSC("愤怒之锤")
-                end
-            end
-        end
+
+    -- 如果有5层神圣能量。
+    local p13_1 = (HolyPower >= 5)
+    -- 释放盾击
+    if (p13_1) then
+        return SetSC("正义盾击", "p13 正义盾击")
     end
-
-
-    -- 如果神圣能量小于5
-    -- 祝福之锤可用次数大于1
-    -- 则释放祝福之锤。
-    if HolyPower < 5 then
-        if SpellCharges("祝福之锤") >= 1 then
-            return SetSC("祝福之锤")
-        end
-    end
-
-    -- 如果神圣能量小于5
-    -- 在施法范围d
-    -- 审判可用次数大于等于1
-    -- 则释放审判。
-    if HolyPower < 5 then
-        if SpellCharges("审判") >= 1 then
-            if SpellInRange("审判", "target") then
-                return SetSC("审判")
-            end
-        end
-    end
-
-
-        -- 如果飞盾冷却好了
-    -- 在施法范围
-    -- 如果能量大于等于3
-    -- 则释放飞盾
-    if SpellCDRemaining_GCD("复仇者之盾") == 0 then
-        if SpellInRange("复仇者之盾", AutoTarget) then
-            return SetSC("复仇者之盾")
-        end
-    end
-
-
-    -- ----------
-    -- 默认值
-    -- ----------
 
     return SetTC("空白", 1, 1, 1)
 end -- PR_PaladinProtection()
 
 -- 全局入口
 
+
+
+
+local function PixelRotationHekili()
+    local ability_id, err = Hekili_GetRecommendedAbility("Primary", 1)
+    if ability_id then
+        --return SetSC(ability_id)
+        local r, g, b = convertToRGB(ability_id)
+        print(ability_id .. "," .. r .. "," .. g .. "," .. b)
+        return true
+    end
+    return false
+end
+
+local tick = 0
+
+
+-- 进入战斗控制
+local function handleEnterCombat()
+    SetBurst(30);
+    --print("进入战斗")
+end
+
+-- 退出战斗
+local function handleLeaveCombat()
+    ClearBurst();
+    --print("退出战斗")
+end
+
 function PixelRotationXLMain()
+
+    -- 减少执行次数，这将显著优化速度。
+    if GetTime() - tick < 0.1 then
+        return false
+    end
+    tick = GetTime()
+
+    if UnitAffectingCombat("player") ~= in_combat then
+        if UnitAffectingCombat("player") then
+            handleEnterCombat()
+        else
+            handleLeaveCombat()
+        end
+        in_combat = UnitAffectingCombat("player")
+    end
 
     --print(SpellCDRemainingGCD("奉献"))
     -- /dump GetSpecialization()
@@ -565,14 +678,28 @@ function PixelRotationXLMain()
 
     if classFilename == "PALADIN" and currentSpec == 2 then
         return PR_PaladinProtection()
+    else
+        return PixelRotationHekili()
     end
 
-
 end -- PixelRotationXLMain
-
 
 
 --/dump PixelRotationXLTest()
 function PixelRotationXLTest()
     return MouseOverHaveCanDispelDeBuff("Poison")
 end
+
+local function OnEvent(self, event, ...)
+    --print(event)
+    --if event == "PLAYER_LEAVE_COMBAT" then
+    --print("离开战斗")
+    --handleLeaveCombat()
+    --elseif event == "PLAYER_ENTER_COMBAT" then
+    --print("进入战斗")
+    --handleEnterCombat()
+    --end
+    PixelRotationXLMain()
+end
+
+f:SetScript("OnEvent", OnEvent)

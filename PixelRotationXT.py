@@ -27,59 +27,48 @@ def stop_loop():
     continue_loop = False
 
 
-keyboard.add_hotkey('alt+q', star_loop)
-keyboard.add_hotkey('alt+e', stop_loop)
+spell_dict = {
+    26573: {"title": "奉献", "key_bind": ["3", ]},
+    204019: {"title": "祝福之锤", "key_bind": ["e", ]},
+    275779: {"title": "审判", "key_bind": ["q", ]},
+    31935: {"title": "复仇者之盾", "key_bind": ["2", ]},
+    96231: {"title": "责难", "key_bind": ["`", ]},
+    213644: {"title": "清毒术", "key_bind": ["r", ]},
+    432459: {"title": "神圣军备", "key_bind": ["alt", "1"]},
+    375576: {"title": "圣洁鸣钟", "key_bind": ["alt", "3"]},
+    24275: {"title": "愤怒之锤", "key_bind": ["5", ]},
+    85673: {"title": "荣耀圣令", "key_bind": ["alt", "e"]},
+    853: {"title": "制裁之锤", "key_bind": ["4", ]},
+    53600: {"title": "正义盾击", "key_bind": ["alt", "2"]},
+}
+# keyboard.add_hotkey('alt+q', star_loop)
+# keyboard.add_hotkey('alt+e', stop_loop)
 
 while True:
-    time.sleep(random.uniform(0.25, 0.4))
-    if not continue_loop:
-
-        continue
+    time.sleep(random.uniform(0.2, 0.3))
+    # if not continue_loop:
+    #
+    #     continue
     frame = dx_camera.get_latest_frame()
     img = Image.fromarray(frame)
-    pixel_color = img.getpixel((8, 16))
-    pixel_color2 = img.getpixel((24, 16))
-    if pixel_color != pixel_color2:
+    pixels = list(img.getdata())
+    unique_colors = set(pixels)
+    if len(unique_colors) != 1:
         print("不在程序")
-    elif pixel_color == (255, 255, 255):
-        print("闲置")
-    elif pixel_color == (0, 0, 0):
-        print("闲置")
-    elif pixel_color == (0, 0, 64):
-        print("奉献")
-        pyautogui.press("num1")
-    elif pixel_color == (0,0, 128):
-        print("祝福之锤")
-        pyautogui.press("num2")
-    elif pixel_color == (0, 0, 191):
-        print("正义盾击")
-        pyautogui.press("num3")
-    elif pixel_color == (0, 0, 255):
-        print("审判")
-        pyautogui.press("num4")
-    elif pixel_color == (0, 64, 0):
-        print("复仇者之盾")
-        pyautogui.press("num5")
-    elif pixel_color == (0, 64, 64):
-        print("责难")
-        pyautogui.press("num6")
-    elif pixel_color == (0, 64, 128):
-        print("清毒术")
-        pyautogui.press("num7")
-    elif pixel_color == (0, 64, 191):
-        print("神圣军备")
-        pyautogui.press("num8")
-    elif pixel_color == (0, 64, 255):
-        print("圣洁鸣钟")
-        pyautogui.press("num9")
-    elif pixel_color == (0, 128, 0):
-        print("愤怒之锤")
-        pyautogui.press("add")
-    elif pixel_color == (0, 128, 64):
-        print("荣耀圣令")
-        pyautogui.press("subtract")
-    # elif pixel_color == (255, 128, 0):
-    #     print("心灵冰冻")
-    #     pyautogui.press("multiply")
-    # print(pixel_color)
-
+    else:
+        pixel_color = pixels[0]
+        if pixel_color == (255, 255, 255):
+            print("闲置")
+        else:
+            r, g, b = pixel_color
+            spell_id = (r * 65536) + (g * 256) + b
+            # print(spell_id)
+            spell = spell_dict.get(spell_id, None)
+            if spell is None:
+                print(f"未知{spell_id}")
+                continue
+            title = spell["title"]
+            print(title)
+            key_bind = spell["key_bind"]
+            # print(key_bind)
+            pyautogui.hotkey(key_bind)
