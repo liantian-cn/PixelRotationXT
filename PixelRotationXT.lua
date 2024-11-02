@@ -241,6 +241,29 @@ local function IsCastInterruptable(target)
     return false
 end -- IsInterruptable
 
+local function AnyInterruptable(target)
+    if target == nil then
+        return false
+    end
+
+
+    -- 如果目标没在施法，则判断是否在通道读条，都不是返回false
+    name, _, _, startTimeMs, endTimeMs, _, _, uninterruptible, T_spellId = UnitCastingInfo(target)
+    if T_spellId == nil then
+        name, _, _, startTimeMs, endTimeMs, _, uninterruptible, T_spellId, _, _ = UnitChannelInfo(target)
+        -- 如果目标没在施法，返回false
+        if T_spellId == nil then
+            return false
+        end
+    end
+
+    -- 施法无法被打断，则返回false
+    if uninterruptible then
+        return false
+    end
+
+    return true
+end
 
 -- 判断天赋是否启用
 local function TalentEnabled(talent_name)
@@ -439,7 +462,7 @@ local function PR_PaladinProtection()
     -- 如果神圣能量>=3
     local p1_1 = (HolyPower >= 3)
     -- 如果没有盾击覆盖，或持续时间少于4秒
-    local p1_2 = (PlayerBuffRemaining("正义盾击") < 4)
+    local p1_2 = (PlayerBuffRemaining("正义盾击") < 10)
     if (p1_1 and p1_2) then
         return SetSC("正义盾击", "p1 正义盾击")
     end
@@ -456,7 +479,7 @@ local function PR_PaladinProtection()
 
 
     -- 血量低于50%，，
-    local p3_1 = ((UnitHealth("player") / UnitHealthMax("player")) < 0.5)
+    local p3_1 = ((UnitHealth("player") / UnitHealthMax("player")) < 0.8)
     -- 存在闪耀之光buff 327510
     local p3_2 = PlayerHaveBuff("闪耀之光")
     -- 则释放荣耀圣令
@@ -471,27 +494,29 @@ local function PR_PaladinProtection()
     local p4_2 = (SpellCDRemaining("责难") == 0)
     -- 责难在施法范围
     local p4_3 = SpellInRange("责难", AutoTarget)
-    -- 复仇者之盾在CD
-    local p4_4 = (SpellCDRemaining_GCD("复仇者之盾") == 0)
-    -- 复仇者之盾在施法范围
-    local p4_5 = SpellInRange("复仇者之盾", AutoTarget)
     -- 优先责难，其次复仇者之盾
     if (p4_1 and p4_2 and p4_3) then
         return SetSC("责难", "p4 责难")
     end
-    if (p4_1 and p4_4 and p4_5) then
-        return SetSC("责难", "p4 责难")
+
+    -- 复仇者之盾在CD
+    local p4_4 = (SpellCDRemaining_GCD("复仇者之盾") == 0)
+    -- 复仇者之盾在施法范围
+    local p4_5 = SpellInRange("复仇者之盾", AutoTarget)
+    -- 目标可打断
+    local p4_6 = AnyInterruptable(AutoTarget)
+    if (p4_6 and p4_4 and p4_5) then
+        return SetSC("复仇者之盾", "p4 复仇者之盾")
     end
 
-
-    -- 如果没有信仰圣光buff
-    local p14_1 = (not PlayerHaveBuff("信仰圣光"))
-    -- 如果闪耀之光层数等于2
-    local p14_2 = (PlayerBuffCount("闪耀之光") == 2)
-    -- 满足以上条件,爆发模式下,则释放荣耀圣令
-    if (p14_1 and p14_2 and IsBurst()) then
-        return SetSC("荣耀圣令", "p14 荣耀圣令")
-    end
+    ---- 如果没有信仰圣光buff
+    --local p14_1 = (not PlayerHaveBuff("信仰圣光"))
+    ---- 如果闪耀之光层数等于2
+    --local p14_2 = (PlayerBuffCount("闪耀之光") == 2)
+    ---- 满足以上条件,爆发模式下,则释放荣耀圣令
+    --if (p14_1 and p14_2 and IsBurst()) then
+    --    return SetSC("荣耀圣令", "p14 荣耀圣令")
+    --end
 
     -- ----------
     -- 驱散
@@ -612,12 +637,12 @@ local function PR_PaladinProtection()
 
 
 
-    -- 如果有5层神圣能量。
-    local p13_1 = (HolyPower >= 5)
-    -- 释放盾击
-    if (p13_1) then
-        return SetSC("正义盾击", "p13 正义盾击")
-    end
+    ---- 如果有5层神圣能量。
+    --local p13_1 = (HolyPower >= 5)
+    ---- 释放盾击
+    --if (p13_1) then
+    --    return SetSC("正义盾击", "p13 正义盾击")
+    --end
 
     return SetTC("空白", 1, 1, 1)
 end -- PR_PaladinProtection()
