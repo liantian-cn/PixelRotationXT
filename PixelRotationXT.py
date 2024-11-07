@@ -15,7 +15,7 @@ dx_camera.start(region=region, video_mode=True, target_fps=120)
 continue_loop = True
 
 
-def star_loop():
+def star_loop():    
     print("开始")
     global continue_loop
     continue_loop = True
@@ -40,6 +40,8 @@ spell_dict = {
     85673: {"title": "荣耀圣令", "key_bind": ["alt", "e"]},
     853: {"title": "制裁之锤", "key_bind": ["4", ]},
     53600: {"title": "正义盾击", "key_bind": ["alt", "2"]},
+    431416: {"title": "治疗药水", "key_bind": ["alt", "x"]},
+    391054: {"title": "战复", "key_bind": ["z",]},
 }
 # keyboard.add_hotkey('alt+q', star_loop)
 # keyboard.add_hotkey('alt+e', stop_loop)

@@ -95,6 +95,14 @@ local function SetTitleBySpellColor(spell_name, title)
 end
 
 SetSC = SetTitleBySpellColor
+
+local function SetTitleBySpellID(spell_id, title)
+    local r, g, b = convertToRGB(spell_id)
+    --print(r,g,b)
+    return SetTitleAndColor(title, r / 255, g / 255, b / 255)
+end
+
+
 ---
 
 
@@ -131,6 +139,7 @@ buff["炽热防御者"] = 31850
 buff["戍卫"] = 389539
 buff["信仰壁垒"] = 385724
 buff["信仰圣光"] = 379041
+buff["抓握之血"] = 432031
 
 
 ---- 爆发控制
@@ -156,40 +165,40 @@ local in_combat = false
 
 -- 打断优先清单
 local interrupt_priority_list = {
-    322938, -- 仙林,收割精魂
-    323057, -- 仙林,BOSS1
-    324776, -- 仙林,木棘外壳
-    324914, -- 仙林,滋养森林
-    321828, -- 仙林,拍手手
-    326046, -- 仙林,模拟抗性
-    340544, -- 仙林,再生鼓舞
-    443430, -- 千丝之城, 流丝缠缚
-    443443, -- 千丝之城, 扭曲思绪
-    446086, -- 千丝之城, 虚空之波
-    434793, -- 回响之城, 共振弹幕
-    434802, -- 回响之城, 惊惧尖鸣
-    448248, -- 回响之城, 恶臭齐射
-    433841, -- 回响之城, 毒液剑雨
-    451871, -- 格瑞姆巴托,剧烈震颤
-    76711, -- 格瑞姆巴托,灼烧心智
-    451224, -- 格瑞姆巴托,暗影烈焰笼罩
-    431309, -- 破晨号,诱捕暗影
-    450756, -- 破晨号,深渊嗥叫
-    431333, -- 破晨号,折磨射线
-    432520, -- 破晨号,暗影屏障
-    449455, -- 矶石宝库,咆哮恐惧
-    445207, -- 矶石宝库,穿透哀嚎
-    429545, -- 矶石宝库,噤声齿轮
-    429109, -- 矶石宝库,愈合金属
-    430097, -- 矶石宝库,融铁之水
-    256957, -- 围攻伯拉勒斯,防水甲壳
-    454440, -- 围攻伯拉勒斯,恶臭喷吐
-    272571, -- 围攻伯拉勒斯,窒息之水
-    334748, -- 通灵战潮,排干体液
-    320462, -- 通灵战潮,通灵箭
-    324293, -- 通灵战潮,刺耳尖啸
-    327127, -- 通灵战潮,修复血肉
-    462802     -- 主机觉醒,净化烈焰
+  322938,    -- 仙林,收割精魂
+  323057,    -- 仙林,BOSS1
+  324776,    -- 仙林,木棘外壳
+  324914,    -- 仙林,滋养森林
+  321828,    -- 仙林,拍手手
+  326046,    -- 仙林,模拟抗性
+  340544,    -- 仙林,再生鼓舞
+  443430,    -- 千丝之城, 流丝缠缚
+  443443,    -- 千丝之城, 扭曲思绪
+  446086,    -- 千丝之城, 虚空之波
+  434793,    -- 回响之城, 共振弹幕
+  434802,    -- 回响之城, 惊惧尖鸣
+  448248,    -- 回响之城, 恶臭齐射
+  433841,    -- 回响之城, 毒液剑雨
+  451871,    -- 格瑞姆巴托,剧烈震颤
+  76711,     -- 格瑞姆巴托,灼烧心智
+  451224,    -- 格瑞姆巴托,暗影烈焰笼罩
+  431309,    -- 破晨号,诱捕暗影
+  450756,    -- 破晨号,深渊嗥叫
+  431333,    -- 破晨号,折磨射线
+  432520,    -- 破晨号,暗影屏障
+  449455,    -- 矶石宝库,咆哮恐惧
+  445207,    -- 矶石宝库,穿透哀嚎
+  429545,    -- 矶石宝库,噤声齿轮
+  429109,    -- 矶石宝库,愈合金属
+  430097,    -- 矶石宝库,融铁之水
+  256957,    -- 围攻伯拉勒斯,防水甲壳
+  454440,    -- 围攻伯拉勒斯,恶臭喷吐
+  272571,    -- 围攻伯拉勒斯,窒息之水
+  334748,    -- 通灵战潮,排干体液
+  320462,    -- 通灵战潮,通灵箭
+  324293,    -- 通灵战潮,刺耳尖啸
+  327127,    -- 通灵战潮,修复血肉
+  462802     -- 主机觉醒,净化烈焰
 }
 
 -- 焦点判断函数
@@ -264,6 +273,46 @@ local function AnyInterruptable(target)
 
     return true
 end
+
+-- 尖刺判断
+
+
+-- 80%减伤清单
+local function get80DamageReduction()
+  local damage_spell_list = {
+    320655,   --通灵 凋骨
+    424888,   -- 宝库 老1
+    428711,   -- 宝库 老3
+    434722,   -- 千丝 老1
+    441298,   -- 千丝 老2
+    461842,   -- 千丝 老3
+    447261,   -- 拖把 老1
+    449444,   -- 拖把 老2
+    450100,   -- 拖把 老4
+    453212,   -- 破晨 老1
+    427001,   -- 破晨 老2
+    438471,   -- 回响 老1
+    8690           -- 炉石
+  }
+  name, _, _, startTimeMs, endTimeMs, _, _, uninterruptible, T_spellId = UnitCastingInfo(target)
+
+  if T_spellId == nil then
+        name, _, _, startTimeMs, endTimeMs, _, uninterruptible, T_spellId, _, _ = UnitChannelInfo(target)
+        -- 如果目标没在施法，返回false
+        if T_spellId == nil then
+            return false
+        end
+  end
+
+  for _, v in ipairs(damage_spell_list) do
+    if v == T_spellId then
+      return true
+    end
+  end
+  return false
+end
+
+
 
 -- 判断天赋是否启用
 local function TalentEnabled(talent_name)
@@ -395,8 +444,8 @@ end
 -- 护腕可用
 
 local function bracers_available()
-    local startTime, duration, enable = C_Container.GetItemCooldown(GetInventoryItemID("player", 9))
-    return (enable == 1) and (duration == 0)
+  local startTime, duration, enable = C_Container.GetItemCooldown(GetInventoryItemID("player", 9))
+  return (enable==1) and (duration==0)
 end
 
 -- 如果身边有指定技能可攻击的怪，最大血量多少的。
@@ -430,6 +479,10 @@ local function PR_PaladinProtection()
             print("退出爆发模式")
         end
         burst_status = IsBurst()
+    end
+
+    if PlayerHaveBuff("抓握之血") then
+        return SetTC("抓握之血", 1, 1, 1)
     end
 
     if not UnitAffectingCombat("player") then
@@ -477,13 +530,20 @@ local function PR_PaladinProtection()
         return SetSC("奉献", "p2 奉献")
     end
 
+  if (UnitHealth("player")/UnitHealthMax("player")) < 0.3 then
+    if bracers_available()  then
+        return SetTitleBySpellID(431416, "p3 护腕")
+    end
+  end
 
     -- 血量低于50%，，
     local p3_1 = ((UnitHealth("player") / UnitHealthMax("player")) < 0.8)
     -- 存在闪耀之光buff 327510
     local p3_2 = PlayerHaveBuff("闪耀之光")
+    -- 蓝大于 250000
+    local p3_3 = (UnitPower("player", Enum.PowerType.Mana) >= 250000)
     -- 则释放荣耀圣令
-    if (p3_1 and p3_2) then
+    if (p3_1 and p3_2 and p3_3) then
         return SetSC("荣耀圣令", "p3 荣耀圣令")
     end
 
@@ -509,24 +569,9 @@ local function PR_PaladinProtection()
         return SetSC("复仇者之盾", "p4 复仇者之盾")
     end
 
-    ---- 如果没有信仰圣光buff
-    --local p14_1 = (not PlayerHaveBuff("信仰圣光"))
-    ---- 如果闪耀之光层数等于2
-    --local p14_2 = (PlayerBuffCount("闪耀之光") == 2)
-    ---- 满足以上条件,爆发模式下,则释放荣耀圣令
-    --if (p14_1 and p14_2 and IsBurst()) then
-    --    return SetSC("荣耀圣令", "p14 荣耀圣令")
-    --end
-
     -- ----------
     -- 驱散
     -- ----------
-
-    -- 如果存在鼠标指向的目标。
-    -- 如果鼠标指向的目标是队员。
-    -- 如果鼠标指向目标有毒或者疾病。
-    -- 如果清毒术在cd
-    -- 清毒
 
     -- 如果存在鼠标指向目标，且是小队成员
     local p5_1 = (UnitExists("mouseover") and (UnitInParty("mouseover") or UnitInRaid("mouseover")))
