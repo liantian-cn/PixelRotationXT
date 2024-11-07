@@ -1,8 +1,10 @@
 ## Interface: 110005
-## Title: PixelRotationXT
-## Notes: A simple color block plugin.
+## Title:  |cffff5900Pixel|cffffb300Rotation|cfff0ff00X|cff96ff00T
+## Notes: 神秘插件.
 ## Version: 1.0
 ## Author: liantian-cn
+## IconAtlas: questlog-questtypeicon-weekly
+## SavedVariables: PixelRotationXTSettings
 
 PixelRotationXT.xml
 PixelRotationXT.lua

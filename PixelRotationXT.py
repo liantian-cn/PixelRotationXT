@@ -43,14 +43,14 @@ spell_dict = {
     431416: {"title": "治疗药水", "key_bind": ["alt", "x"]},
     391054: {"title": "战复", "key_bind": ["z",]},
 }
-# keyboard.add_hotkey('alt+q', star_loop)
-# keyboard.add_hotkey('alt+e', stop_loop)
+keyboard.add_hotkey('f1', star_loop)
+keyboard.add_hotkey('f2', stop_loop)
 
 while True:
     time.sleep(random.uniform(0.2, 0.3))
-    # if not continue_loop:
-    #
-    #     continue
+    if not continue_loop:
+
+        continue
     frame = dx_camera.get_latest_frame()
     img = Image.fromarray(frame)
     pixels = list(img.getdata())
