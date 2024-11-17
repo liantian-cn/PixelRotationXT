@@ -28,7 +28,7 @@ def stop_loop():
 
 
 spell_dict = {
-    # 防骑
+    # 防骑&惩戒
     26573: {"title": "奉献", "key_bind": ["3", ]},
     204019: {"title": "祝福之锤", "key_bind": ["e", ]},
     275779: {"title": "审判", "key_bind": ["q", ]},
@@ -42,6 +42,16 @@ spell_dict = {
     853: {"title": "制裁之锤", "key_bind": ["4", ]},
     53600: {"title": "正义盾击", "key_bind": ["alt", "2"]},
     391054: {"title": "战复", "key_bind": ["z", ]},
+    # 惩戒
+    343527: {"title": "处决审判", "key_bind": ["3", ]},
+    53385: {"title": "神圣风暴", "key_bind": ["e", ]},
+    255937: {"title": "灰烬觉醒", "key_bind": ["2", ]},
+    427453: {"title": "圣光之锤", "key_bind": ["2", ]},
+    184575: {"title": "公正之剑", "key_bind": ["1", ]},
+    383328: {"title": "最终审判", "key_bind": ["alt", "q"]},
+    1022: {"title": "保护祝福", "key_bind": ["alt", "z"]},
+    642: {"title": "圣盾术", "key_bind": ["alt", "x"]},
+    135928: {"title": "圣疗", "key_bind": ["alt", "c"]},
     # 血迪凯
     195292: {"title": "死神的抚摩", "key_bind": ["3", ]},
     195182: {"title": "精髓分裂", "key_bind": ["alt", "q"]},

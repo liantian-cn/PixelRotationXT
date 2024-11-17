@@ -55,8 +55,10 @@ f:RegisterEvent("LOADING_SCREEN_DISABLED")
 
 local function convertToRGB(number)
     -- 确保输入数字在有效范围内
+    --number = tonumber(number)
+    --print(number)
     if number < 0 or number > 16777216 then
-        print("输入数字无效")
+        print("输入数字无效" .. number)
         return
     end
 
@@ -188,7 +190,31 @@ local function ClearBurst()
     burst_time = GetTime() - 30
 end
 
-PR_SetBurst = SetBurst
+local function HandleEntryBurst()
+
+    if Hekili.DB.profile.toggles.cooldowns.value == false then
+        Hekili:FireToggle("cooldowns")
+    end
+    if Hekili.DB.profile.toggles.essences.value == false then
+        Hekili:FireToggle("essences")
+    end
+
+end
+
+local function HandleLevelBurst()
+    if Hekili.DB.profile.toggles.cooldowns.value == true then
+        Hekili:FireToggle("cooldowns")
+    end
+    if Hekili.DB.profile.toggles.essences.value == true then
+        Hekili:FireToggle("essences")
+    end
+end
+
+function ManualBurst(time)
+    burst_status = true
+    burst_time = GetTime() + time
+    HandleEntryBurst()
+end
 
 local in_combat = false
 -- 奉献计时器
@@ -535,7 +561,7 @@ function EnemiesInRangeCount(mod_health, range)
     for _, plate in pairs(C_NamePlate.GetNamePlates()) do
         unitID = plate.namePlateUnitToken
         --if UnitCanAttack("player", unitID) and UnitAffectingCombat(unitID) and UnitIsEnemy("player", unitID) then
-        if UnitCanAttack("player", unitID)  then
+        if UnitCanAttack("player", unitID) then
             if isUnitInRange(unitID, range) then
                 if UnitHealth(unitID) > mod_health then
                     inRange = inRange + 1
@@ -549,18 +575,6 @@ end
 -- 防骑模块
 
 local function PR_PaladinProtection()
-
-
-    if burst_status ~= IsBurst() then
-        if IsBurst() then
-            --print("进入爆发模式")
-            print("进入爆发模式")
-        else
-            --print("退出爆发模式")
-            print("退出爆发模式")
-        end
-        burst_status = IsBurst()
-    end
 
     if PlayerHaveBuff("抓握之血") then
         return SetTC("001 抓握之血", 1, 1, 1)
@@ -791,16 +805,6 @@ local function getRuneCount()
 end
 
 local function PR_DeathKnightBlood()
-    if burst_status ~= IsBurst() then
-        if IsBurst() then
-            --print("进入爆发模式")
-            print("进入爆发模式")
-        else
-            --print("退出爆发模式")
-            print("退出爆发模式")
-        end
-        burst_status = IsBurst()
-    end
 
     if PlayerHaveBuff("抓握之血") then
         return SetTC("001 抓握之血", 1, 1, 1)
@@ -1018,15 +1022,15 @@ local function PR_DeathKnightBlood()
     end
 
     -- 血沸填充
-        -- 如果学血沸有充能
+    -- 如果学血沸有充能
     if SpellCharges("血液沸腾") >= 1 then
-        if EnemiesInRangeCount(100000,5) then
+        if EnemiesInRangeCount(100000, 5) then
             return SetSC("血液沸腾", "301 填充血液沸腾")
         end
 
     end
 
-     return SetTC("999空白", 1, 1, 1)
+    return SetTC("999空白", 1, 1, 1)
 
 end  -- PR_DeathKnightBlood()
 
@@ -1036,16 +1040,57 @@ end  -- PR_DeathKnightBlood()
 
 
 local function PixelRotationHekili()
-    local ability_id, err = Hekili_GetRecommendedAbility("Primary", 1)
-    --print(ability_id)
-    --print(err)
-    if ability_id then
-        --return SetSC(ability_id)
-        local r, g, b = convertToRGB(ability_id)
-        print(ability_id .. "," .. r .. "," .. g .. "," .. b)
-        return true
+    if PlayerHaveBuff("抓握之血") then
+        return SetTC("001 抓握之血", 1, 1, 1)
     end
-    return false
+
+    if not UnitAffectingCombat("player") then
+        --return false
+        return SetTC("002 不在战斗中", 1, 1, 1)
+    end
+
+    if IsMounted() then
+        return SetTC("003 在坐骑上", 1, 1, 1)
+    end
+
+    if UnitIsPlayer("target") then
+        return SetTC("004 目标是玩家", 1, 1, 1)
+    end
+
+    if Hekili.DB.profile.toggles.mode.value ~= "automatic" then
+        Hekili.DB.profile.toggles.mode.value = "automatic"
+        Hekili:UpdateDisplayVisibility()
+        Hekili:ForceUpdate("HEKILI_TOGGLE", true)
+    end
+
+    local ability_id, err, info = Hekili_GetRecommendedAbility("Primary", 1)
+    if ability_id == nil then
+        return SetTC("005 没有推荐技能", 1, 1, 1)
+    end
+    if ability_id <= 0 then
+        ability_id, err, info = Hekili_GetRecommendedAbility("Primary", 2)
+        if ability_id <= 0 then
+            ability_id, err, info = Hekili_GetRecommendedAbility("Primary", 3)
+            if ability_id <= 0 then
+                return SetTC("006 没有推荐技能", 1, 1, 1)
+            end
+        end
+    end
+    --print(ability_id)
+    ----print(err)
+    if ability_id ~= nil then
+        local r, g, b = convertToRGB(ability_id)
+        local spellInfo = C_Spell.GetSpellInfo(ability_id)
+        --local spellInfo = C_SpellBook.GetSpellInfo(ability_id)
+        --print(spellInfo)
+        local title = "Hekili" .. spellInfo.name
+        --    print(ability_id .. "," .. r .. "," .. g .. "," .. b)
+        --    SetTC(title, r/255, g/255, b/255)
+        --    return true
+        --    print(title)
+        return SetTC(title, r / 255, g / 255, b / 255)
+    end
+    --return false
 end
 
 local tick = 0
@@ -1053,7 +1098,7 @@ local tick = 0
 
 -- 进入战斗控制
 local function handleEnterCombat()
-    SetBurst(30);
+    SetBurst(25);
     --print("进入战斗")
 end
 
@@ -1080,7 +1125,18 @@ function PixelRotationXLMain()
         in_combat = UnitAffectingCombat("player")
     end
 
-    --print(SpellCDRemainingGCD("奉献"))
+    if burst_status ~= IsBurst() then
+        if IsBurst() then
+            HandleEntryBurst()
+            print("进入爆发模式")
+
+        else
+            HandleLevelBurst()
+            print("退出爆发模式")
+        end
+        burst_status = IsBurst()
+    end
+
     -- /dump GetSpecialization()
     -- /dump UnitClass("player")
     local className, classFilename, classId = UnitClass("player")
