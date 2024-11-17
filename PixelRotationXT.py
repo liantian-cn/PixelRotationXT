@@ -15,7 +15,7 @@ dx_camera.start(region=region, video_mode=True, target_fps=120)
 continue_loop = True
 
 
-def star_loop():    
+def star_loop():
     print("开始")
     global continue_loop
     continue_loop = True
@@ -28,6 +28,7 @@ def stop_loop():
 
 
 spell_dict = {
+    # 防骑
     26573: {"title": "奉献", "key_bind": ["3", ]},
     204019: {"title": "祝福之锤", "key_bind": ["e", ]},
     275779: {"title": "审判", "key_bind": ["q", ]},
@@ -40,8 +41,25 @@ spell_dict = {
     85673: {"title": "荣耀圣令", "key_bind": ["alt", "e"]},
     853: {"title": "制裁之锤", "key_bind": ["4", ]},
     53600: {"title": "正义盾击", "key_bind": ["alt", "2"]},
-    431416: {"title": "治疗药水", "key_bind": ["alt", "x"]},
-    391054: {"title": "战复", "key_bind": ["z",]},
+    391054: {"title": "战复", "key_bind": ["z", ]},
+    # 血迪凯
+    195292: {"title": "死神的抚摩", "key_bind": ["3", ]},
+    195182: {"title": "精髓分裂", "key_bind": ["alt", "q"]},
+    439843: {"title": "死神印记", "key_bind": ["alt", "e"]},
+    49998: {"title": "灵界打击", "key_bind": ["e", ]},
+    47528: {"title": "心灵冰冻", "key_bind": ["`", ]},
+    50842: {"title": "血液沸腾", "key_bind": ["alt", "`"]},
+    43265: {"title": "枯萎凋零", "key_bind": ["5", ]},
+    274156: {"title": "吞噬", "key_bind": ["alt", "1"]},
+    136168: {"title": "吸血鬼之血", "key_bind": ["alt", "5"]},
+    49028: {"title": "符文刃舞", "key_bind": ["alt", "z"]},
+    219809: {"title": "墓石", "key_bind": ["alt", "2"]},
+    206930: {"title": "心脏打击", "key_bind": ["q", ]},
+    46585: {"title": "亡者复生", "key_bind": ["alt", "r"]},
+    194844: {"title": "白骨风暴", "key_bind": ["alt", "3"]},
+    # 通用
+    431416: {"title": "护腕", "key_bind": ["alt", "x"]},
+
 }
 keyboard.add_hotkey('f1', star_loop)
 keyboard.add_hotkey('f2', stop_loop)
@@ -49,7 +67,6 @@ keyboard.add_hotkey('f2', stop_loop)
 while True:
     time.sleep(random.uniform(0.2, 0.3))
     if not continue_loop:
-
         continue
     frame = dx_camera.get_latest_frame()
     img = Image.fromarray(frame)
@@ -72,5 +89,4 @@ while True:
             title = spell["title"]
             print(title)
             key_bind = spell["key_bind"]
-            # print(key_bind)
             pyautogui.hotkey(key_bind)
