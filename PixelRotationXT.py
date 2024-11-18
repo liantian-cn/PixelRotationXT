@@ -52,6 +52,9 @@ spell_dict = {
     1022: {"title": "保护祝福", "key_bind": ["alt", "z"]},
     642: {"title": "圣盾术", "key_bind": ["alt", "x"]},
     135928: {"title": "圣疗", "key_bind": ["alt", "c"]},
+    403876: {"title": "圣佑", "key_bind": ["alt", "1"]},
+    184662: {"title": "复仇之盾", "key_bind": ["alt", "211"]},
+    20271: {"title": "审判", "key_bind": ["q", ]},
     # 血迪凯
     195292: {"title": "死神的抚摩", "key_bind": ["3", ]},
     195182: {"title": "精髓分裂", "key_bind": ["alt", "q"]},

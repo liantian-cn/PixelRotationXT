@@ -764,15 +764,6 @@ local function PR_PaladinProtection()
             return SetSC("祝福之锤", "140 祝福之锤")
         end
 
-        -- 如果审判可用，在施法范围，释放审判。
-        if (SpellCharges("审判") >= 1) and SpellInRange("审判", "target") then
-            return SetSC("审判", "150 审判")
-        end
-
-        -- 如果祝福之锤可用，释放祝福之锤。
-        if (SpellCharges("祝福之锤") >= 1) then
-            return SetSC("祝福之锤", "160 祝福之锤")
-        end
     end
 
     -- 释放飞盾打dps
@@ -782,6 +773,16 @@ local function PR_PaladinProtection()
         if SpellInRange("复仇者之盾", AutoTarget) then
             return SetSC("复仇者之盾", "170 复仇者之盾")
         end
+    end
+
+    -- 如果审判可用，在施法范围，释放审判。
+    if (SpellCharges("审判") >= 1) and SpellInRange("审判", "target") then
+        return SetSC("审判", "150 审判")
+    end
+
+    -- 如果祝福之锤可用，释放祝福之锤。
+    if (SpellCharges("祝福之锤") >= 1) then
+        return SetSC("祝福之锤", "160 祝福之锤")
     end
 
     -- 能量满了就打盾击
