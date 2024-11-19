@@ -665,6 +665,19 @@ local function PR_PaladinProtection()
         end
     end
 
+    -- 如果有2层闪耀之光，且圣洁武器或者神圣壁垒存在，且持续时间小于3秒，释放荣耀圣令
+    if (PlayerBuffCount("闪耀之光") == 2) then
+        if (PlayerHaveBuff("圣洁武器") or PlayerHaveBuff("神圣壁垒")) then
+            if  (PlayerBuffRemaining("圣洁武器") <=3) or  (PlayerBuffRemaining("神圣壁垒") <=3)  then
+                if (UnitPower("player", Enum.PowerType.Mana) >= 250000) then
+                    -- 则释放荣耀圣令
+                    return SetSC("荣耀圣令", "55 荣耀圣令")
+                end
+            end
+        end
+
+    end
+
     -- 如果焦点或目标的施法，有任意施法
     if AnyInterruptable(AutoTarget) then
         -- 复仇者之盾在CD
