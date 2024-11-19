@@ -694,7 +694,6 @@ local function PR_PaladinProtection()
         if (SpellCDRemaining("责难") == 0) then
             -- 在责难施法范围
             if SpellInRange("责难", AutoTarget) then
-                print("责难")
                 return SetSC("责难", "70 责难")
             end
 
