@@ -20,38 +20,34 @@ local text = textBox:CreateFontString(nil, "OVERLAY", "GameFontNormal")
 text:SetPoint("LEFT", textBox, "LEFT", 0, 0)
 text:SetFont("Fonts\\FRIZQT__.TTF", 24, nil)
 --text:SetText("这是一个文本框")
-f:RegisterEvent("UNIT_COMBAT")
+
+
 f:RegisterEvent("PLAYER_LEAVE_COMBAT")
 f:RegisterEvent("PLAYER_ENTER_COMBAT")
-
-f:RegisterEvent("CHAT_MSG_ADDON")
 f:RegisterEvent("PLAYER_STARTED_MOVING")
 f:RegisterEvent("PLAYER_STOPPED_MOVING")
 f:RegisterEvent("PLAYER_TOTEM_UPDATE")
-f:RegisterEvent("UNIT_AURA")
-f:RegisterEvent("UNIT_HEALTH")
-f:RegisterEvent("UNIT_SPELLCAST_START")
+f:RegisterEvent("PLAYER_TARGET_CHANGED")
+f:RegisterEvent("PLAYER_FOCUS_CHANGED")
+f:RegisterEvent("PLAYER_DAMAGE_DONE_MODS")
+f:RegisterUnitEvent("UNIT_COMBAT","player")
+f:RegisterUnitEvent("UNIT_AURA","player")
+f:RegisterUnitEvent("UNIT_HEALTH","player")
+f:RegisterUnitEvent("UNIT_SPELLCAST_START","player")
 f:RegisterEvent("UNIT_SPELLCAST_SENT")
-f:RegisterEvent("UNIT_SPELLCAST_SUCCEEDED")
-f:RegisterEvent("UNIT_SPELLCAST_FAILED")
-f:RegisterEvent("UNIT_SPELLCAST_STOP")
-f:RegisterEvent("UNIT_SPELLCAST_CHANNEL_STOP")
-f:RegisterEvent("UNIT_SPELLCAST_CHANNEL_START")
-f:RegisterEvent("UNIT_SPELLCAST_CHANNEL_UPDATE")
-f:RegisterEvent("UNIT_SPELLCAST_EMPOWER_START")
-f:RegisterEvent("UNIT_SPELLCAST_EMPOWER_STOP")
-f:RegisterEvent("UNIT_SPELLCAST_EMPOWER_UPDATE")
-f:RegisterEvent("UNIT_SPELLCAST_INTERRUPTED")
-f:RegisterEvent("UNIT_POWER_UPDATE")
-f:RegisterEvent("ENCOUNTER_START")
-f:RegisterEvent("ENCOUNTER_END")
-f:RegisterUnitEvent("AZERITE_EMPOWERED_ITEM_SELECTION_UPDATED")
-f:RegisterUnitEvent("AZERITE_ESSENCE_ACTIVATED")
-f:RegisterUnitEvent("PLAYER_EQUIPMENT_CHANGED")
-f:RegisterUnitEvent("TRAIT_CONFIG_UPDATED")
-f:RegisterUnitEvent("UI_ERROR_MESSAGE")
-f:RegisterEvent("LOADING_SCREEN_ENABLED")
-f:RegisterEvent("LOADING_SCREEN_DISABLED")
+f:RegisterUnitEvent("UNIT_SPELLCAST_SUCCEEDED","player")
+f:RegisterUnitEvent("UNIT_SPELLCAST_FAILED","player")
+f:RegisterUnitEvent("UNIT_SPELLCAST_STOP","player")
+f:RegisterUnitEvent("UNIT_SPELLCAST_CHANNEL_STOP","player")
+f:RegisterUnitEvent("UNIT_SPELLCAST_CHANNEL_START","player")
+f:RegisterUnitEvent("UNIT_SPELLCAST_CHANNEL_UPDATE","player")
+f:RegisterUnitEvent("UNIT_SPELLCAST_EMPOWER_START","player")
+f:RegisterUnitEvent("UNIT_SPELLCAST_EMPOWER_STOP","player")
+f:RegisterUnitEvent("UNIT_SPELLCAST_EMPOWER_UPDATE","player")
+f:RegisterUnitEvent("UNIT_SPELLCAST_INTERRUPTED","player")
+f:RegisterUnitEvent("UNIT_POWER_UPDATE","player")
+f:RegisterUnitEvent("UNIT_POWER_FREQUENT","player")
+
 
 local function convertToRGB(number)
     -- 确保输入数字在有效范围内
@@ -255,7 +251,8 @@ local interrupt_priority_list = {
     320462, -- 通灵战潮,通灵箭
     324293, -- 通灵战潮,刺耳尖啸
     327127, -- 通灵战潮,修复血肉
-    462802     -- 主机觉醒,净化烈焰
+    462802,     -- 主机觉醒,净化烈焰
+
 }
 
 -- 焦点判断函数
@@ -276,7 +273,8 @@ end
 -- 焦点或目标的打断是否值得打断的判断函数。
 
 local function IsCastInterruptable(target)
-
+    --return true
+    --
     if target == nil then
         return false
     end
@@ -666,11 +664,12 @@ local function PR_PaladinProtection()
     end
 
     -- 如果有2层闪耀之光，且圣洁武器或者神圣壁垒存在，且持续时间小于3秒，释放荣耀圣令
-    if (PlayerBuffCount("闪耀之光") == 2) then
+    if (PlayerBuffCount("闪耀之光") == 2) and IsBurst() then
         if (PlayerHaveBuff("圣洁武器") or PlayerHaveBuff("神圣壁垒")) then
             if  (PlayerBuffRemaining("圣洁武器") <=3) or  (PlayerBuffRemaining("神圣壁垒") <=3)  then
                 if (UnitPower("player", Enum.PowerType.Mana) >= 250000) then
                     -- 则释放荣耀圣令
+                    --print("55 荣耀圣令")
                     return SetSC("荣耀圣令", "55 荣耀圣令")
                 end
             end
@@ -695,7 +694,8 @@ local function PR_PaladinProtection()
         if (SpellCDRemaining("责难") == 0) then
             -- 在责难施法范围
             if SpellInRange("责难", AutoTarget) then
-                SetSC("责难", "70 责难")
+                print("责难")
+                return SetSC("责难", "70 责难")
             end
 
         end
@@ -1107,11 +1107,13 @@ end
 
 function PixelRotationXLMain()
 
-    -- 减少执行次数，这将显著优化速度。
-    if GetTime() - tick < 0.1 then
+    --
+    ------ 减少执行次数，这将显著优化速度。
+    if GetTime() - tick < 0.01 then
         return false
     end
     tick = GetTime()
+    --print(GetTime())
 
     if UnitAffectingCombat("player") ~= in_combat then
         if UnitAffectingCombat("player") then
