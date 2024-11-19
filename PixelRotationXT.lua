@@ -744,35 +744,9 @@ local function PR_PaladinProtection()
         end
     end
 
-
-    -- 如果神圣能量小于5
-    if (HolyPower < 5) then
-        -- 优先愤怒之锤、然后审判、祝福之锤
-
-        -- 如果愤怒之锤可用、愤怒之锤在CD、愤怒之锤在距离内
-        if SpellUsable("愤怒之锤") and (SpellCDRemaining_GCD("愤怒之锤") == 0) and SpellInRange("愤怒之锤", "target") then
-            return SetSC("愤怒之锤", "120 愤怒之锤")
-        end
-
-        -- 如果审判可用次数大于1，在施法范围，释放审判。
-        if (SpellCharges("审判") > 1) and SpellInRange("审判", "target") then
-            return SetSC("审判", "130 审判")
-        end
-
-        -- 如果祝福之锤可用次数大于2，在施法范围，释放祝福之锤。
-        if (SpellCharges("祝福之锤") > 2) then
-            return SetSC("祝福之锤", "140 祝福之锤")
-        end
-
-    end
-
-    -- 释放飞盾打dps
-    -- 如果飞盾冷却好了
-    if (SpellCDRemaining_GCD("复仇者之盾") == 0) then
-        -- 飞盾在施法范围
-        if SpellInRange("复仇者之盾", AutoTarget) then
-            return SetSC("复仇者之盾", "170 复仇者之盾")
-        end
+    -- 如果愤怒之锤可用、愤怒之锤在CD、愤怒之锤在距离内
+    if SpellUsable("愤怒之锤") and (SpellCDRemaining_GCD("愤怒之锤") == 0) and SpellInRange("愤怒之锤", "target") then
+        return SetSC("愤怒之锤", "120 愤怒之锤")
     end
 
     -- 如果审判可用，在施法范围，释放审判。
@@ -783,6 +757,15 @@ local function PR_PaladinProtection()
     -- 如果祝福之锤可用，释放祝福之锤。
     if (SpellCharges("祝福之锤") >= 1) then
         return SetSC("祝福之锤", "160 祝福之锤")
+    end
+
+    -- 释放飞盾打dps
+    -- 如果飞盾冷却好了
+    if (SpellCDRemaining_GCD("复仇者之盾") == 0) then
+        -- 飞盾在施法范围
+        if SpellInRange("复仇者之盾", AutoTarget) then
+            return SetSC("复仇者之盾", "170 复仇者之盾")
+        end
     end
 
     -- 能量满了就打盾击
