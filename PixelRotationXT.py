@@ -78,7 +78,7 @@ keyboard.add_hotkey('f1', star_loop)
 keyboard.add_hotkey('f2', stop_loop)
 
 while True:
-    time.sleep(random.uniform(0.15, 0.25))
+    time.sleep(random.uniform(0.2, 0.25))
     if not continue_loop:
         continue
     frame = dx_camera.get_latest_frame()

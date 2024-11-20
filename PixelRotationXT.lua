@@ -1,8 +1,6 @@
 local talent = {  }
 local spell = {  }
 local buff = {  }
-local item = {  }
-local color = {  }
 
 local f = CreateFrame("Frame", nil, UIParent)
 --f:SetPoint("CENTER")
@@ -578,11 +576,6 @@ local function PR_PaladinProtection()
         return SetTC("001 抓握之血", 1, 1, 1)
     end
 
-    if not UnitAffectingCombat("player") then
-        --return false
-        return SetTC("002 不在战斗中", 1, 1, 1)
-    end
-
     if IsMounted() then
         return SetTC("003 在坐骑上", 1, 1, 1)
     end
@@ -591,6 +584,10 @@ local function PR_PaladinProtection()
         return SetTC("004 目标是玩家", 1, 1, 1)
     end
 
+    if not UnitAffectingCombat("player") then
+        --return false
+        return SetTC("002 不在战斗中", 1, 1, 1)
+    end
 
 
     -- -------
@@ -674,7 +671,6 @@ local function PR_PaladinProtection()
                 end
             end
         end
-
     end
 
     -- 如果焦点或目标的施法，有任意施法
@@ -806,11 +802,6 @@ local function PR_DeathKnightBlood()
         return SetTC("001 抓握之血", 1, 1, 1)
     end
 
-    if not UnitAffectingCombat("player") then
-        --return false
-        return SetTC("002 不在战斗中", 1, 1, 1)
-    end
-
     if IsMounted() then
         return SetTC("003 在坐骑上", 1, 1, 1)
     end
@@ -818,6 +809,12 @@ local function PR_DeathKnightBlood()
     if UnitIsPlayer("target") then
         return SetTC("004 目标是玩家", 1, 1, 1)
     end
+
+    if not UnitAffectingCombat("player") then
+        --return false
+        return SetTC("002 不在战斗中", 1, 1, 1)
+    end
+
 
     -- 符文
     local runes = getRuneCount()
