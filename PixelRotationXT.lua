@@ -28,24 +28,23 @@ f:RegisterEvent("PLAYER_TOTEM_UPDATE")
 f:RegisterEvent("PLAYER_TARGET_CHANGED")
 f:RegisterEvent("PLAYER_FOCUS_CHANGED")
 f:RegisterEvent("PLAYER_DAMAGE_DONE_MODS")
-f:RegisterUnitEvent("UNIT_COMBAT","player")
-f:RegisterUnitEvent("UNIT_AURA","player")
-f:RegisterUnitEvent("UNIT_HEALTH","player")
-f:RegisterUnitEvent("UNIT_SPELLCAST_START","player")
+f:RegisterUnitEvent("UNIT_COMBAT", "player")
+f:RegisterUnitEvent("UNIT_AURA", "player")
+f:RegisterUnitEvent("UNIT_HEALTH", "player")
+f:RegisterUnitEvent("UNIT_SPELLCAST_START", "player")
 f:RegisterEvent("UNIT_SPELLCAST_SENT")
-f:RegisterUnitEvent("UNIT_SPELLCAST_SUCCEEDED","player")
-f:RegisterUnitEvent("UNIT_SPELLCAST_FAILED","player")
-f:RegisterUnitEvent("UNIT_SPELLCAST_STOP","player")
-f:RegisterUnitEvent("UNIT_SPELLCAST_CHANNEL_STOP","player")
-f:RegisterUnitEvent("UNIT_SPELLCAST_CHANNEL_START","player")
-f:RegisterUnitEvent("UNIT_SPELLCAST_CHANNEL_UPDATE","player")
-f:RegisterUnitEvent("UNIT_SPELLCAST_EMPOWER_START","player")
-f:RegisterUnitEvent("UNIT_SPELLCAST_EMPOWER_STOP","player")
-f:RegisterUnitEvent("UNIT_SPELLCAST_EMPOWER_UPDATE","player")
-f:RegisterUnitEvent("UNIT_SPELLCAST_INTERRUPTED","player")
-f:RegisterUnitEvent("UNIT_POWER_UPDATE","player")
-f:RegisterUnitEvent("UNIT_POWER_FREQUENT","player")
-
+f:RegisterUnitEvent("UNIT_SPELLCAST_SUCCEEDED", "player")
+f:RegisterUnitEvent("UNIT_SPELLCAST_FAILED", "player")
+f:RegisterUnitEvent("UNIT_SPELLCAST_STOP", "player")
+f:RegisterUnitEvent("UNIT_SPELLCAST_CHANNEL_STOP", "player")
+f:RegisterUnitEvent("UNIT_SPELLCAST_CHANNEL_START", "player")
+f:RegisterUnitEvent("UNIT_SPELLCAST_CHANNEL_UPDATE", "player")
+f:RegisterUnitEvent("UNIT_SPELLCAST_EMPOWER_START", "player")
+f:RegisterUnitEvent("UNIT_SPELLCAST_EMPOWER_STOP", "player")
+f:RegisterUnitEvent("UNIT_SPELLCAST_EMPOWER_UPDATE", "player")
+f:RegisterUnitEvent("UNIT_SPELLCAST_INTERRUPTED", "player")
+f:RegisterUnitEvent("UNIT_POWER_UPDATE", "player")
+f:RegisterUnitEvent("UNIT_POWER_FREQUENT", "player")
 
 local function convertToRGB(number)
     -- 确保输入数字在有效范围内
@@ -249,7 +248,7 @@ local interrupt_priority_list = {
     320462, -- 通灵战潮,通灵箭
     324293, -- 通灵战潮,刺耳尖啸
     327127, -- 通灵战潮,修复血肉
-    462802,     -- 主机觉醒,净化烈焰
+    462802, -- 主机觉醒,净化烈焰
 
 }
 
@@ -663,7 +662,7 @@ local function PR_PaladinProtection()
     -- 如果有2层闪耀之光，且圣洁武器或者神圣壁垒存在，且持续时间小于3秒，释放荣耀圣令
     if (PlayerBuffCount("闪耀之光") == 2) and IsBurst() then
         if (PlayerHaveBuff("圣洁武器") or PlayerHaveBuff("神圣壁垒")) then
-            if  (PlayerBuffRemaining("圣洁武器") <=3) or  (PlayerBuffRemaining("神圣壁垒") <=3)  then
+            if (PlayerBuffRemaining("圣洁武器") <= 3) or (PlayerBuffRemaining("神圣壁垒") <= 3) then
                 if (UnitPower("player", Enum.PowerType.Mana) >= 250000) then
                     -- 则释放荣耀圣令
                     --print("55 荣耀圣令")
