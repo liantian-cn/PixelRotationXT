@@ -249,6 +249,8 @@ local interrupt_priority_list = {
     324293, -- 通灵战潮,刺耳尖啸
     327127, -- 通灵战潮,修复血肉
     462802, -- 主机觉醒,净化烈焰
+    450449, -- ？？
+    450914, -- ？？
 
 }
 
@@ -896,7 +898,7 @@ local function PR_DeathKnightBlood()
         if (SpellCDRemaining("心灵冰冻") == 0) then
             -- 在责难施法范围
             if SpellInRange("心灵冰冻", AutoTarget) then
-                SetSC("心灵冰冻", "70 心灵冰冻")
+                return SetSC("心灵冰冻", "70 心灵冰冻")
             end
 
         end
