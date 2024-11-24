@@ -1102,6 +1102,12 @@ local function handleLeaveCombat()
     --print("退出战斗")
 end
 
+-- 延迟执行
+function PRDelay(delay)
+    tick = GetTime() + delay
+    return SetTC("延迟"..delay, 1, 1, 1)
+end
+
 function PixelRotationXLMain()
 
     --
